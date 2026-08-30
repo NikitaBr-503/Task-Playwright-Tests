@@ -10,7 +10,7 @@ import {
 } from '@pages/purchase-requisitions/purchase-requisition-details.page';
 import { PurchaseRequisitionListPage } from '@pages/purchase-requisitions/purchase-requisition-list.page';
 
-/** Identity of a document the flow just created. */
+/** Identity of a document the action just created. */
 export interface CreatedPurchaseRequisition {
   id: string;
   number: string;
@@ -18,9 +18,9 @@ export interface CreatedPurchaseRequisition {
 }
 
 /**
- * Business flows for Purchase Requisitions.
+ * Business actions for Purchase Requisitions.
  *
- * A flow stitches page objects together into a complete user journey. Keeping
+ * An action class stitches page objects together into a complete user journey. Keeping
  * it out of the specs means the journey can be a one-line **precondition** for
  * any test that needs an existing document, instead of being copy-pasted:
  *
@@ -34,7 +34,7 @@ export interface CreatedPurchaseRequisition {
  * fails must fail loudly and immediately, rather than leaving the actual test to
  * report a confusing downstream error.
  */
-export class PurchaseRequisitionFlow {
+export class PurchaseRequisitionActions {
   private readonly sidebar: SidebarComponent;
   private readonly listPage: PurchaseRequisitionListPage;
   private readonly createPage: PurchaseRequisitionCreatePage;
@@ -54,22 +54,22 @@ export class PurchaseRequisitionFlow {
    * Returns the new document's id and number.
    */
   async create(data: PurchaseRequisitionData): Promise<CreatedPurchaseRequisition> {
-    // 1. Navigate to Purchase Requisitions from the left rail.
+    // TC-PR-001 step 1 — navigate to Purchase Requisitions from the left rail.
     await this.page.goto('/');
     await this.sidebar.navigateTo('Purchase Requisitions');
     await this.listPage.waitUntilLoaded();
 
-    // 2. Start a new document.
+    // TC-PR-001 step 2 — start a new document.
     await this.listPage.clickCreate();
     await this.createPage.waitUntilLoaded();
 
-    // 3-4. Fill the header and submit — this persists the Draft.
+    // TC-PR-001 steps 3-4 — fill the header and submit; this persists the Draft.
     await this.createPage.fillForm(data);
     await this.createPage.clickNextStep();
     await this.detailsPage.waitUntilLoaded();
     await this.detailsPage.expectStatus(DocumentStatus.draft);
 
-    // 5-7. Add each item and verify it landed in the table.
+    // TC-PR-001 steps 5-7 — add each item and verify it landed in the table.
     for (const item of data.items) {
       await this.detailsPage.addNewItem(item);
       await this.detailsPage.saveItem();
@@ -77,7 +77,7 @@ export class PurchaseRequisitionFlow {
     }
     expect(await this.detailsPage.itemCount()).toBe(data.items.length);
 
-    // 8-10. Confirm the document and verify it left Draft.
+    // TC-PR-001 steps 8-10 — confirm the document and verify it left Draft.
     const id = this.detailsPage.documentId();
     const number = await this.detailsPage.documentNumber();
 

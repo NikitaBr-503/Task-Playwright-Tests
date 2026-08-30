@@ -1,4 +1,4 @@
-import type { Locator, Page, Response } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 /**
@@ -26,40 +26,5 @@ export abstract class BasePage {
 
   async waitUntilLoaded(): Promise<void> {
     await expect(this.pageLoadedLocator).toBeVisible();
-  }
-
-  async isLoaded(): Promise<boolean> {
-    return this.pageLoadedLocator.isVisible();
-  }
-
-  // ---- Small shared helpers -------------------------------------------------
-
-  async reload(): Promise<Response | null> {
-    const response = await this.page.reload();
-    await this.waitUntilLoaded();
-    return response;
-  }
-
-  async title(): Promise<string> {
-    return this.page.title();
-  }
-
-  get url(): string {
-    return this.page.url();
-  }
-
-  /**
-   * Wait for the network to settle, bounded so a long-polling or analytics
-   * request can never hang the whole test.
-   */
-  async waitForNetworkIdle(timeout = 10_000): Promise<void> {
-    await this.page.waitForLoadState('networkidle', { timeout }).catch(() => {
-      /* Best effort — a chatty app should not fail the test here. */
-    });
-  }
-
-  /** Attach a named screenshot to the current test report. */
-  async screenshot(name: string): Promise<Buffer> {
-    return this.page.screenshot({ path: `test-results/screenshots/${name}.png`, fullPage: true });
   }
 }

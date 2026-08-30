@@ -1,41 +1,22 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import type { TestUser } from '@data/users';
+import type { Credentials } from '@config/env';
+import { Routes } from '@data/routes';
 
 import { BasePage } from './base.page';
 import { CookieConsentBanner } from './components/cookie-consent.component';
 
-/**
- * Precoro login screen — https://app.precoro.com/login
- *
- * Selectors are taken from the live markup: the app ships no `data-testid`
- * attributes, so we anchor on stable form ids and semantic roles rather than
- * on layout-driven CSS classes.
- */
 export class LoginPage extends BasePage {
-  protected readonly path = '/login';
+  protected readonly path = Routes.login;
 
   readonly form = this.page.locator('#login_form');
   readonly emailInput = this.page.locator('#username');
   readonly passwordInput = this.page.locator('#password');
   readonly submitButton = this.page.locator('button.login-form__submit');
-  readonly forgotPasswordLink = this.page.getByRole('link', { name: /forgot password/i });
-
-  /** Alternative sign-in routes offered next to the password form. */
-  readonly ssoLink = this.page.getByRole('link', { name: /sign in with sso/i });
-  readonly googleLink = this.page.getByRole('link', { name: /sign in with google/i });
-  readonly xeroLink = this.page.getByRole('link', { name: /sign in with xero/i });
-  readonly magicLinkLink = this.page.getByRole('link', { name: /one-time login link/i });
-
-  /** Server-rendered validation / authentication error. */
-  readonly errorMessage = this.page.locator(
-    '.login-form__error, .alert-danger, [class*="error"]:visible',
-  );
+  readonly cookieBanner = new CookieConsentBanner(this.page);
 
   protected readonly pageLoadedLocator = this.form;
-
-  readonly cookieBanner = new CookieConsentBanner(this.page);
 
   constructor(page: Page) {
     super(page);
@@ -57,22 +38,13 @@ export class LoginPage extends BasePage {
    * Full happy-path sign-in: open the page, authenticate, and wait until the
    * app has navigated away from `/login`.
    */
-  async login(user: TestUser): Promise<void> {
+  async login(credentials: Credentials): Promise<void> {
     await this.open();
-    await this.submitCredentials(user.email, user.password);
+    await this.submitCredentials(credentials.email, credentials.password);
     await this.expectLoginSucceeded();
   }
 
   async expectLoginSucceeded(): Promise<void> {
     await expect(this.page).not.toHaveURL(/\/login/, { timeout: 30_000 });
-  }
-
-  async expectLoginFailed(): Promise<void> {
-    await expect(this.page).toHaveURL(/\/login/);
-    await expect(this.errorMessage.first()).toBeVisible();
-  }
-
-  async errorText(): Promise<string> {
-    return (await this.errorMessage.first().textContent())?.trim() ?? '';
   }
 }

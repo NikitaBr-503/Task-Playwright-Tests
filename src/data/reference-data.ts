@@ -7,40 +7,36 @@
  * them in one file means re-pointing the suite at a different company is a
  * single edit rather than a hunt through specs.
  *
- * Generated, per-run values (notes, descriptions) live in the data factories
- * instead — see `purchase-requisition.data.ts`.
+ * Only values the suite actually selects live here — an unused entry is an
+ * unverified claim about the account. Add more as new tests need them.
+ *
+ * Generated, per-run values (notes, cancellation reasons) live in the data
+ * factories instead — see `purchase-requisition.data.ts`.
  */
 export const ReferenceData = {
   locations: {
     backoffice: 'Backoffice',
-    headquarters: 'Headquarters',
   },
   departments: {
     administration: 'Administration',
-    finance: 'Finance',
-    management: 'Management',
-    humanResources: 'Human Resources',
-    marketing: 'Marketing',
-    sales: 'Sales',
   },
   suppliers: {
     apple: 'Apple',
-    amazon: 'Amazon',
-    staples: 'Staples',
-    zoom: 'Zoom',
   },
   categories: {
     tech: 'Tech',
-    officeSupplies: 'Office Supplies',
-    services: 'Services',
-    travel: 'Travel',
-    marketing: 'Marketing',
   },
-  units: {
-    piece: 'piece',
-    pack: 'pack',
-    kilogram: 'kilogram',
-    pound: 'pound',
+  paymentTerms: {
+    prepayment: 'Prepayment',
+  },
+  /**
+   * Taxes carry their rate alongside the label so expected totals can be
+   * computed rather than hard-coded: `1000 * (1 + 0.1) = 1,100.00`.
+   */
+  taxes: {
+    vat10: { label: 'VAT 10% 10.00%', rate: 0.1 },
   },
   currency: 'EUR',
 } as const;
+
+export type TaxDefinition = (typeof ReferenceData.taxes)[keyof typeof ReferenceData.taxes];

@@ -22,11 +22,9 @@
       "@pages/*": ["./src/pages/*"],
       "@components/*": ["./src/pages/components/*"],
       "@fixtures/*": ["./src/fixtures/*"],
-      "@flows/*": ["./src/flows/*"],
-      "@api/*": ["./src/api/*"],
+      "@actions/*": ["./src/actions/*"],
       "@data/*": ["./src/data/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@app-types/*": ["./src/types/*"]
+      "@utils/*": ["./src/utils/*"]
     }
   },
   "include": ["src/**/*.ts", "tests/**/*.ts", "playwright.config.ts"],

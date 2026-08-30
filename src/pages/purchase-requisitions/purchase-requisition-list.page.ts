@@ -27,9 +27,9 @@ export class PurchaseRequisitionListPage extends BasePage {
     });
   }
 
-  /** Row whose link points at a specific document id. */
-  rowById(id: string): Locator {
-    return this.rows.filter({ has: this.page.locator(`a[href*="/purchase/requisition/${id}/"]`) });
+  /** Status badge shown in a document's row. */
+  rowStatus(documentNumber: string): Locator {
+    return this.row(documentNumber).locator('.status-badge').first();
   }
 
   async clickCreate(): Promise<void> {
@@ -42,9 +42,5 @@ export class PurchaseRequisitionListPage extends BasePage {
     await expect(row).toBeVisible();
     await row.click();
     await expect(this.page).toHaveURL(/\/purchase\/requisition\/\d+\/show/);
-  }
-
-  async rowCount(): Promise<number> {
-    return this.rows.count();
   }
 }

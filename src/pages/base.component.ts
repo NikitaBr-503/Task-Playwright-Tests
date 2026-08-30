@@ -19,8 +19,4 @@ export abstract class BaseComponent {
   async isVisible(): Promise<boolean> {
     return this.root.isVisible();
   }
-
-  async waitUntilVisible(timeout?: number): Promise<void> {
-    await this.root.waitFor({ state: 'visible', timeout });
-  }
 }

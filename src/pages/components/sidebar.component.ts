@@ -14,9 +14,6 @@ import { BaseComponent } from '../base.component';
  * having to drive the hover animation.
  */
 export class SidebarComponent extends BaseComponent {
-  readonly items = this.root.locator('.app-nav-item');
-  readonly activeItem = this.root.locator('.app-nav-item--active');
-
   constructor(page: Page) {
     super(page, '.app-nav-list');
   }
@@ -31,14 +28,5 @@ export class SidebarComponent extends BaseComponent {
     await target.hover();
     await target.click();
     await expect(this.page).toHaveURL(new RegExp(`${escapeRegExp(NavItems[label])}(\\?|$|/)`));
-  }
-
-  async activeItemName(): Promise<string> {
-    return (await this.activeItem.innerText()).trim();
-  }
-
-  async visibleItemNames(): Promise<string[]> {
-    const names = await this.items.allInnerTexts();
-    return names.map((name) => name.trim()).filter(Boolean);
   }
 }

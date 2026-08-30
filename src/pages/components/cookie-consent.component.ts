@@ -12,7 +12,6 @@ import { BaseComponent } from '../base.component';
 export class CookieConsentBanner extends BaseComponent {
   readonly acceptButton = this.root.locator('.t-acceptAllButton');
   readonly declineButton = this.root.locator('.t-declineButton');
-  readonly preferencesButton = this.root.locator('.t-preference-button');
 
   constructor(page: Page) {
     super(page, '.termly-styles-module-root-aecb0e, [id*="termly"], .t-consentPrompt');

@@ -74,6 +74,11 @@ export function generateNote(): string {
   return `[e2e ${faker.string.alphanumeric(6)}] ${faker.commerce.productDescription()}`;
 }
 
+/** Generated reason for cancelling a document — likewise tagged and unique. */
+export function generateCancelReason(): string {
+  return `[e2e ${faker.string.alphanumeric(6)}] ${faker.lorem.sentence()}`;
+}
+
 /** Expected line total for an item, as the UI computes it. */
 export function itemTotal(item: PurchaseRequisitionItemData): number {
   return item.quantity * item.price;

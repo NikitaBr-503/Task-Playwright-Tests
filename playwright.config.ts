@@ -7,8 +7,7 @@ import { STORAGE_STATE } from './src/config/paths';
  * Playwright configuration for the Precoro (app.precoro.com) E2E suite.
  *
  * Project graph:
- *   setup  ──▶ chromium / firefox / webkit   (UI suites, run authenticated)
- *          └─▶ api                           (request-context suites)
+ *   setup ──▶ chromium / firefox / webkit   (UI suites, run authenticated)
  *
  * The `setup` project logs in once and writes storage state to `.auth/`, so
  * every UI project starts already signed in instead of paying for a login per
@@ -93,13 +92,6 @@ export default defineConfig({
         ...devices['Desktop Safari'],
         storageState: STORAGE_STATE.user,
       },
-    },
-
-    {
-      name: 'api',
-      testDir: './tests/api',
-      use: { ...devices['Desktop Chrome'], storageState: STORAGE_STATE.user },
-      dependencies: ['setup'],
     },
   ],
 });

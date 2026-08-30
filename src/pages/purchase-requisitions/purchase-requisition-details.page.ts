@@ -2,43 +2,54 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import type { PurchaseRequisitionItemData } from '@data/purchase-requisition.data';
+import { Routes } from '@data/routes';
 import { exactText } from '@utils/text';
 
 import { BasePage } from '../base.page';
 import { ConfirmDialogComponent } from '../components/confirm-dialog.component';
+import { MoreActionsMenuComponent } from '../components/more-actions-menu.component';
 import { PcSelectComponent } from '../components/pc-select.component';
+import { ToastComponent } from '../components/toast.component';
 
-/** Document statuses this page can report. */
 export const DocumentStatus = {
   draft: 'Draft',
-  pending: 'Pending',
   approved: 'Approved',
-  rejected: 'Rejected',
+  completed: 'Completed',
+  canceled: 'Canceled',
+} as const;
+
+export const CANCELED_MESSAGE = 'The document has been canceled.';
+
+export const MoreAction = {
+  markAsCompleted: 'Mark as completed',
+  cancelDocument: 'Cancel Document',
 } as const;
 
 export type DocumentStatusValue = (typeof DocumentStatus)[keyof typeof DocumentStatus];
 
-/**
- * Purchase Requisition details — `/purchase/requisition/{id}/show`.
- *
- * Serves both halves of the flow: adding items to a Draft and confirming it,
- * then reading everything back for verification.
- */
 export class PurchaseRequisitionDetailsPage extends BasePage {
-  protected readonly path = '/purchase/requisition';
+  protected readonly path = Routes.purchaseRequisitions;
 
   readonly header = this.page.locator('.new-document-header');
-  /** Role-based so a change of heading level (h1/h2) cannot break it. */
   readonly documentTitle = this.header.getByRole('heading').first();
   readonly statusBadge = this.page.locator('.document-statuses .status-badge').first();
 
-  readonly itemsTable = this.page.locator('.document-items-table');
   readonly itemRows = this.page.locator('.document-items-table-row');
   readonly editingRow = this.page.locator('.document-items-table-row.active-row');
 
   readonly addNewItemButton = this.page.getByRole('button', { name: 'Add New Item' });
   readonly confirmButton = this.page.getByRole('button', { name: 'Confirm', exact: true });
+
+  readonly createPurchaseOrderButton = this.page.getByRole('button', {
+    name: 'Create Purchase Order',
+  });
   readonly confirmDialog = new ConfirmDialogComponent(this.page);
+  readonly moreActions = new MoreActionsMenuComponent(this.page);
+  readonly toast = new ToastComponent(this.page);
+
+  readonly noteBlock = this.page
+    .locator('.document-info-block')
+    .filter({ has: this.page.locator('.info-label', { hasText: /^\s*Note/ }) });
 
   protected readonly pageLoadedLocator = this.header;
 
@@ -60,7 +71,7 @@ export class PurchaseRequisitionDetailsPage extends BasePage {
   /** Document number without the `#`, e.g. `11`. */
   async documentNumber(): Promise<string> {
     const text = await this.documentTitle.innerText();
-    const match = text.match(/#(\d+)/);
+    const match = text.match(/#?\s*(\d+)\s*$/);
     if (!match?.[1]) throw new Error(`Could not read a document number from "${text}"`);
     return match[1];
   }
@@ -70,10 +81,6 @@ export class PurchaseRequisitionDetailsPage extends BasePage {
     const match = this.page.url().match(/\/purchase\/requisition\/(\d+)\/show/);
     if (!match?.[1]) throw new Error(`Not on a document details URL: ${this.page.url()}`);
     return match[1];
-  }
-
-  async status(): Promise<string> {
-    return (await this.statusBadge.innerText()).trim();
   }
 
   // ---- Header info block ----------------------------------------------------
@@ -93,18 +100,7 @@ export class PurchaseRequisitionDetailsPage extends BasePage {
     await expect(this.infoBlock(label)).toContainText(value);
   }
 
-  /** The Note block is labelled with extra badges, so match on the prefix. */
-  get noteBlock(): Locator {
-    return this.page
-      .locator('.document-info-block')
-      .filter({ has: this.page.locator('.info-label', { hasText: /^\s*Note/ }) });
-  }
-
   // ---- Items ----------------------------------------------------------------
-
-  itemRow(index = 0): Locator {
-    return this.itemRows.nth(index);
-  }
 
   /** Row matched by its item name — order-independent. */
   itemRowByName(name: string): Locator {
@@ -117,10 +113,6 @@ export class PurchaseRequisitionDetailsPage extends BasePage {
     return this.itemRows.count();
   }
 
-  /**
-   * Open a blank item row and fill it. The row is left unsaved so the caller
-   * can assert on it before committing.
-   */
   async addNewItem(item: PurchaseRequisitionItemData): Promise<void> {
     await this.addNewItemButton.click();
     await expect(this.editingRow).toBeVisible();
@@ -147,12 +139,19 @@ export class PurchaseRequisitionDetailsPage extends BasePage {
     await expect(this.editingRow).toBeHidden();
   }
 
-  // ---- Confirmation ---------------------------------------------------------
-
-  /** Click Confirm and accept the "Are you sure…" dialog. */
   async confirmDocument(): Promise<void> {
     await this.confirmButton.click();
     await this.confirmDialog.confirm();
+  }
+
+  async markAsCompleted(): Promise<void> {
+    await this.moreActions.clickAction(MoreAction.markAsCompleted);
+    await this.confirmDialog.confirm();
+  }
+
+  async cancelDocument(reason: string): Promise<void> {
+    await this.moreActions.clickAction(MoreAction.cancelDocument);
+    await this.confirmDialog.confirmWithComment(reason);
   }
 
   async expectStatus(status: DocumentStatusValue): Promise<void> {

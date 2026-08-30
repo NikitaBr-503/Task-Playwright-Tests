@@ -6,18 +6,7 @@ import { exactText } from '@utils/text';
 import { BaseComponent } from '../base.component';
 
 /**
- * Precoro's custom `.pc-select` dropdown.
- *
- * Two behaviours make this worth wrapping:
- *
- * 1. **Options are portalled.** They render into a `.pc-select__menu` outside
- *    the select's own subtree, so scoping option lookups to the component root
- *    finds nothing. We target the currently-open menu instead.
- * 2. **Menus of closed selects can linger in the DOM.** A page-wide
- *    `.pc-select__option` lookup can therefore match an option belonging to a
- *    different dropdown — on the item row, the unit select's options sit
- *    alongside the category select's. Filtering to the *visible* menu avoids
- *    picking the wrong list.
+ * Custom `.pc-select` dropdown.
  */
 export class PcSelectComponent extends BaseComponent {
   readonly control = this.root.locator('.pc-select__control');
@@ -28,10 +17,16 @@ export class PcSelectComponent extends BaseComponent {
     super(page, root);
   }
 
-  /** The dropdown panel that is currently open, wherever it was portalled to. */
-  private get openMenu(): Locator {
-    return this.page.locator('.pc-select__menu').filter({ visible: true }).last();
-  }
+  /**
+   * The dropdown panel that is currently open, wherever it was portalled to.
+   *
+   * A locator is a lazy description, so this re-resolves on every use — it
+   * always refers to whichever menu is open *now*, not at construction time.
+   */
+  private readonly openMenu = this.page
+    .locator('.pc-select__menu')
+    .filter({ visible: true })
+    .last();
 
   async isOpen(): Promise<boolean> {
     return this.openMenu.isVisible().catch(() => false);
@@ -66,12 +61,25 @@ export class PcSelectComponent extends BaseComponent {
     await expect(this.openMenu).toBeHidden();
   }
 
+  /**
+   * Tick an option in a checkbox-style multi-select.
+   */
+  async checkOption(label: string): Promise<void> {
+    await this.open();
+    const checkbox = this.page.getByRole('checkbox', { name: label });
+    await expect(checkbox.first()).toBeVisible();
+    await checkbox.first().check();
+  }
+
+  /** Close an open menu without changing the selection. */
+  async close(): Promise<void> {
+    if (!(await this.isOpen())) return;
+    await this.page.keyboard.press('Escape');
+    await expect(this.openMenu).toBeHidden();
+  }
+
   /** Currently selected label, or `''` when nothing is chosen. */
   async selectedText(): Promise<string> {
     return (await this.value.first().innerText()).trim();
-  }
-
-  async expectSelected(label: string): Promise<void> {
-    await expect(this.value.first()).toHaveText(exactText(label));
   }
 }

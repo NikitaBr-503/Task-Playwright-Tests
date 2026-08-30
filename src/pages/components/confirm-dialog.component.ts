@@ -10,7 +10,9 @@ import { BaseComponent } from '../base.component';
 export class ConfirmDialogComponent extends BaseComponent {
   readonly title = this.root.locator('.pc-alert-dialog__title');
   readonly yesButton = this.root.getByRole('button', { name: 'Yes' });
-  readonly cancelButton = this.root.getByRole('button', { name: 'Cancel' });
+
+  /** Variants that demand a reason — cancelling a document, for instance. */
+  readonly commentInput = this.root.locator('textarea.pc-textarea');
 
   constructor(page: Page) {
     super(page, '.pc-alert-dialog');
@@ -20,19 +22,23 @@ export class ConfirmDialogComponent extends BaseComponent {
     await expect(this.root).toBeVisible();
   }
 
-  async titleText(): Promise<string> {
-    return (await this.title.innerText()).trim();
-  }
-
   async confirm(): Promise<void> {
     await this.waitUntilOpen();
     await this.yesButton.click();
     await expect(this.root).toBeHidden();
   }
 
-  async cancel(): Promise<void> {
+  /**
+   * Fill the mandatory comment, then confirm.
+   *
+   * "Yes" stays disabled until the comment is non-empty, so the enabled check
+   * is what proves the reason actually registered.
+   */
+  async confirmWithComment(comment: string): Promise<void> {
     await this.waitUntilOpen();
-    await this.cancelButton.click();
+    await this.commentInput.fill(comment);
+    await expect(this.yesButton).toBeEnabled();
+    await this.yesButton.click();
     await expect(this.root).toBeHidden();
   }
 }

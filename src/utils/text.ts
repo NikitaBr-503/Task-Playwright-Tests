@@ -13,8 +13,3 @@ export function escapeRegExp(value: string): string {
 export function exactText(value: string): RegExp {
   return new RegExp(`^\\s*${escapeRegExp(value)}\\s*$`);
 }
-
-/** Collapse runs of whitespace and trim — for comparing rendered text. */
-export function normalize(value: string): string {
-  return value.replace(/\s+/g, ' ').trim();
-}

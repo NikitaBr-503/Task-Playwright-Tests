@@ -1,0 +1,40 @@
+{
+  "name": "precoro-playwright-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "End-to-end test automation for Precoro (app.precoro.com) built with Playwright + TypeScript",
+  "author": "Mykyta Brykhuntsov",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:chromium": "playwright test --project=chromium",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:regression": "playwright test --grep @regression",
+    "test:api": "playwright test --project=api",
+    "test:auth": "playwright test --project=setup",
+    "report": "playwright show-report",
+    "trace": "playwright show-trace",
+    "codegen": "playwright codegen https://app.precoro.com/",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "install:browsers": "playwright install --with-deps",
+    "clean": "rm -rf test-results playwright-report blob-report .auth"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^9.9.0",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.3.0",
+    "dotenv": "^17.4.2",
+    "prettier": "^3.9.6",
+    "typescript": "^7.0.2"
+  }
+}

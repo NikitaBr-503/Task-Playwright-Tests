@@ -21,23 +21,18 @@ import { expect, test } from '@fixtures/index';
 
 /**
  * Purchase Order — creation from an approved Purchase Requisition.
- *
- * The requisition is built in a **precondition** by reusing
- * `PurchaseRequisitionActions.create` — the same journey the requisition suite
- * exercises. That is the point of keeping these actions out of specs: a document this
- * test merely needs to exist costs one line here.
  */
-test.describe('Purchase Orders', () => {
+test.describe('Purchase Orders tests', () => {
   let requisitionData: PurchaseRequisitionData;
   let requisition: CreatedPurchaseRequisition;
 
   test.beforeEach(async ({ purchaseRequisitions }) => {
-    // Precondition: an approved requisition to raise the order from (TC-PR-001).
+    // Step 1 — precondition: an approved requisition to raise the order from.
     requisitionData = buildPurchaseRequisition();
     requisition = await purchaseRequisitions.create(requisitionData);
   });
 
-  test('TC-PO-001 — a Purchase Order created from a requisition is confirmed and sent to the supplier @smoke', async ({
+  test('Verify thata Purchase Order created from a requisition is confirmed and sent to the supplier @smoke', async ({
     purchaseOrders,
     poListPage,
     poDetailsPage,
@@ -45,36 +40,38 @@ test.describe('Purchase Orders', () => {
     const orderData: PurchaseOrderData = buildPurchaseOrder();
     const netTotal = documentTotal(requisitionData);
 
-    const order = await test.step('Steps 1-6 — create the Purchase Order', async () => {
-      // The action also makes the arrival "Not sent" check.
+    const order = await test.step('create the Purchase Order from the requisition', async () => {
+      // Steps 2-5, plus the "Not sent" check the action makes on arrival.
       return purchaseOrders.createFromRequisition(requisition.id, orderData);
     });
 
-    await test.step('Step 7 — the new order is not yet sent to the supplier', async () => {
+    await test.step('the new order is not yet sent to the supplier', async () => {
+      // Step 6.
       await expect(poDetailsPage.documentTitle).toHaveText(
         poDetailsPage.titlePattern(order.number),
       );
       await poDetailsPage.expectSupplierSendStatus(SupplierSendStatus.notSent);
     });
 
-    await test.step('Steps 8-10 — confirming reports success', async () => {
-      // The toast is transient, so it is asserted immediately.
+    await test.step('confirming reports success and dispatches to the supplier', async () => {
+      // Steps 7-9. The toast is transient, so it is asserted immediately.
       await poDetailsPage.confirmDocument();
       await poDetailsPage.toast.expectSuccess(CONFIRMED_AND_SENT_MESSAGE);
     });
 
-    await test.step('Step 11 — supplier status flips to Sent', async () => {
+    await test.step('supplier status flips to Sent', async () => {
+      // Step 10.
       await poDetailsPage.expectSupplierSendStatus(SupplierSendStatus.sent);
     });
 
-    await test.step('Step 12 — reopen the order from the Purchase Orders list', async () => {
+    await test.step('find and reopen the order from the Purchase Orders list', async () => {
       await poListPage.open();
       await expect(poListPage.row(order.number)).toBeVisible();
       await poListPage.openDocument(order.number);
       await poDetailsPage.waitUntilLoaded();
     });
 
-    await test.step('Step 13 — the reopened order carries everything provided', async () => {
+    await test.step('the reopened order carries everything provided', async () => {
       const [item] = requisitionData.items;
       expect(item, 'requisition data must define at least one item').toBeDefined();
       if (!item) return;
@@ -91,15 +88,15 @@ test.describe('Purchase Orders', () => {
       }
     });
 
-    await test.step('Step 14 — totals reflect the requisition value plus tax', async () => {
+    await test.step('totals reflect the requisition value plus tax', async () => {
       await poDetailsPage.expectInfo('Net Total', formatAmount(netTotal));
       await poDetailsPage.expectInfo('Total Tax', formatAmount(taxAmount(netTotal, orderData)));
       await poDetailsPage.expectInfo('Gross Total', formatAmount(grossTotal(netTotal, orderData)));
       await expect(poDetailsPage.infoBlock('Gross Total')).toContainText(ReferenceData.currency);
     });
 
-    await test.step('Step 15 — the order links back to its source requisition', async () => {
-      // The relationship is the whole point of this journey.
+    await test.step('the order links back to its source requisition', async () => {
+      // Step 11 — the relationship is the whole point of this journey.
       await expect(poDetailsPage.relatedRequisitionsBlock).toContainText(`#${requisition.number}`);
       await poDetailsPage.expectSupplierSendStatus(SupplierSendStatus.sent);
     });

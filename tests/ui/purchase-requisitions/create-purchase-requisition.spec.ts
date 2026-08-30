@@ -18,25 +18,18 @@ import { expect, test } from '@fixtures/index';
 
 /**
  * Purchase Requisition — creation.
- *
- * The document is created in a **precondition**, not in the test body: creation
- * is a shared journey (`PurchaseRequisitionActions.create`) that every future test
- * in this file — editing, revising, rejecting, creating a PO from it — will
- * need. That keeps each test focused on the one behaviour it actually asserts.
  */
-test.describe('Purchase Requisitions', () => {
+test.describe('Purchase Requisitions tests', () => {
   let data: PurchaseRequisitionData;
   let created: CreatedPurchaseRequisition;
 
   test.beforeEach(async ({ purchaseRequisitions }) => {
-    // TC-PR-001 steps 1-10, run here as a precondition. For TC-PR-002 and
-    // TC-PR-003 this is simply "an approved requisition exists".
     // Fresh data per test — the note is generated, so runs never collide.
     data = buildPurchaseRequisition();
     created = await purchaseRequisitions.create(data);
   });
 
-  test('TC-PR-001 — a created Purchase Requisition persists every submitted value @smoke', async ({
+  test('Verify that a created Purchase Requisition persists every submitted value @smoke', async ({
     prListPage,
     prDetailsPage,
   }) => {
@@ -44,29 +37,29 @@ test.describe('Purchase Requisitions', () => {
     expect(item, 'test data must define at least one item').toBeDefined();
     if (!item) return;
 
-    await test.step('Step 11 — open the Purchase Requisitions list', async () => {
+    await test.step('open the Purchase Requisitions list', async () => {
       await prListPage.open();
     });
 
-    await test.step('Step 12 — find and open the created document', async () => {
+    await test.step('find and open the created document', async () => {
       await expect(prListPage.row(created.number)).toBeVisible();
       await prListPage.openDocument(created.number);
       await prDetailsPage.waitUntilLoaded();
     });
 
-    await test.step('Step 13a — document identity and status', async () => {
+    await test.step('document identity and status', async () => {
       await expect(prDetailsPage.documentTitle).toContainText(`#${created.number}`);
       await expect(prDetailsPage.statusBadge).toHaveText(DocumentStatus.approved);
     });
 
-    await test.step('Step 13b — header values match what was submitted', async () => {
+    await test.step('header values match what was submitted', async () => {
       await prDetailsPage.expectInfo('Location', data.location);
       await prDetailsPage.expectInfo('Departments', data.department);
       await prDetailsPage.expectInfo('Delivery Date', data.deliveryDate);
       await expect(prDetailsPage.noteBlock).toContainText(data.note);
     });
 
-    await test.step('Step 13c — the item row matches what was entered', async () => {
+    await test.step('the item row matches what was entered', async () => {
       const row = prDetailsPage.itemRowByName(item.name);
       await expect(row).toBeVisible();
       await expect(row).toContainText(item.name);
@@ -77,71 +70,74 @@ test.describe('Purchase Requisitions', () => {
       await expect(row).toContainText(item.category);
     });
 
-    await test.step('Step 13d — document total is the sum of its items', async () => {
+    await test.step('document total is the sum of its items', async () => {
       const total = prDetailsPage.infoBlock('Total');
       await expect(total).toContainText(formatAmount(documentTotal(data)));
       await expect(total).toContainText(ReferenceData.currency);
     });
   });
 
-  test('TC-PR-002 — an approved Purchase Requisition can be marked as completed @regression', async ({
+  test('Verify thatan approved Purchase Requisition can be marked as completed @regression', async ({
     prListPage,
     prDetailsPage,
   }) => {
-    await test.step('Step 1 — open the created requisition', async () => {
-      // Creating it is the shared precondition above.
+    await test.step('open the created requisition', async () => {
+      // Steps 1-2 — step 1 is the shared precondition above.
       await prDetailsPage.openById(created.id);
       await expect(prDetailsPage.statusBadge).toHaveText(DocumentStatus.approved);
     });
 
-    await test.step('Steps 2-4 — complete it from the "…" menu', async () => {
-      // Completing is offered only in the header overflow menu.
+    await test.step('complete it from the "…" menu', async () => {
+      // Steps 3-4. Completing is offered only in the header overflow menu.
       await prDetailsPage.moreActions.open();
       await expect(prDetailsPage.moreActions.action(MoreAction.markAsCompleted)).toBeVisible();
       await prDetailsPage.markAsCompleted();
     });
 
-    await test.step('Step 5 — the document reports Completed', async () => {
+    await test.step('the document reports Completed', async () => {
+      // Step 5.
       await prDetailsPage.expectStatus(DocumentStatus.completed);
     });
 
-    await test.step('Steps 6-7 — the list reports Completed too', async () => {
-      // The status has to survive a round trip, not just re-render.
+    await test.step('the list reports Completed too', async () => {
+      // Steps 6-7 — the status has to survive a round trip, not just re-render.
       await prListPage.open();
       await expect(prListPage.rowStatus(created.number)).toHaveText(DocumentStatus.completed);
     });
   });
 
-  test('TC-PR-003 — a Purchase Requisition can be canceled with a reason @regression', async ({
+  test('Verify that a Purchase Requisition can be canceled with a reason @regression', async ({
     prListPage,
     prDetailsPage,
   }) => {
     const reason = generateCancelReason();
 
-    await test.step('Step 1 — open the created requisition', async () => {
-      // Creating it is the shared precondition above.
+    await test.step('open the created requisition', async () => {
+      // Steps 1-2 — step 1 is the shared precondition above.
       await prDetailsPage.openById(created.id);
       await expect(prDetailsPage.statusBadge).toHaveText(DocumentStatus.approved);
     });
 
-    await test.step('Steps 2-5 — cancel it from the "…" menu, giving a reason', async () => {
-      // The dialog keeps "Yes" disabled until the comment is filled, which
-      // `confirmWithComment` asserts before submitting.
+    await test.step('cancel it from the "…" menu, giving a reason', async () => {
+      // Steps 3-6. The dialog keeps "Yes" disabled until the comment is filled,
+      // which `confirmWithComment` asserts before submitting.
       await prDetailsPage.moreActions.open();
       await expect(prDetailsPage.moreActions.action(MoreAction.cancelDocument)).toBeEnabled();
       await prDetailsPage.cancelDocument(reason);
     });
 
-    await test.step('Step 6 — the cancellation is reported', async () => {
-      // Transient toast, asserted immediately after the action.
+    await test.step('the cancellation is reported', async () => {
+      // Step 7 — transient toast, asserted immediately after the action.
       await prDetailsPage.toast.expectSuccess(CANCELED_MESSAGE);
     });
 
-    await test.step('Step 7 — the document reports Canceled', async () => {
+    await test.step('the document reports Canceled', async () => {
+      // Step 8.
       await prDetailsPage.expectStatus(DocumentStatus.canceled);
     });
 
-    await test.step('Steps 8-9 — the list reports Canceled too', async () => {
+    await test.step('the list reports Canceled too', async () => {
+      // Step 9.
       await prListPage.open();
       await expect(prListPage.rowStatus(created.number)).toHaveText(DocumentStatus.canceled);
     });

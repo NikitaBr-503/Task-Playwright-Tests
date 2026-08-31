@@ -116,7 +116,6 @@ export const env = {
     headless: boolean('HEADLESS', true),
     slowMo: number('SLOW_MO', 0),
     retries: number('RETRIES', isCI ? 2 : 0),
-    workers: process.env.WORKERS?.trim() ? number('WORKERS', 1) : undefined,
   },
 
   isCI,

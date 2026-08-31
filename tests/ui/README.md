@@ -31,10 +31,6 @@ Apply to every case below unless stated otherwise.
 | 4   | The user holds permission to create, confirm, complete and cancel Purchase Requisitions.                    |
 | 5   | The cookie-consent banner is dismissed (handled automatically on the login page).                           |
 
-> **Environment note.** This account has **no approval workflow configured**, so a
-> confirmed document goes straight to `Approved` rather than `Pending`. On an
-> account with approvers, the expected status in step "confirm" changes.
-
 ---
 
 ## TC-PR-001 — Create a Purchase Requisition with a single item

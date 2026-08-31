@@ -21,9 +21,11 @@ export default defineConfig({
 
   /* Fail the build on CI if a `test.only` was committed. */
   forbidOnly: env.isCI,
-  fullyParallel: true,
+
+  fullyParallel: false,
+  workers: 1,
+
   retries: env.runner.retries,
-  workers: env.runner.workers ?? (env.isCI ? 2 : undefined),
 
   timeout: env.timeouts.test,
   expect: { timeout: env.timeouts.expect },

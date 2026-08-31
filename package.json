@@ -18,6 +18,8 @@
     "test:webkit": "playwright test --project=webkit",
     "test:smoke": "playwright test --grep @smoke",
     "test:regression": "playwright test --grep @regression",
+    "test:name": "playwright test --grep",
+    "test:file": "playwright test",
     "test:auth": "playwright test --project=setup",
     "report": "playwright show-report",
     "trace": "playwright show-trace",

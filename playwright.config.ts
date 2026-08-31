@@ -21,9 +21,19 @@ export default defineConfig({
 
   /* Fail the build on CI if a `test.only` was committed. */
   forbidOnly: env.isCI,
-  fullyParallel: true,
+
+  /*
+   * Single-threaded: one worker, no intra-file parallelism.
+   *
+   * Every test drives the same Precoro account and creates real documents in
+   * it, so concurrent runs share mutable server state — list contents, document
+   * numbering and the "needs your action" counters all move underneath each
+   * other. Serial execution keeps runs deterministic at the cost of wall time.
+   */
+  fullyParallel: false,
+  workers: 1,
+
   retries: env.runner.retries,
-  workers: env.runner.workers ?? (env.isCI ? 2 : undefined),
 
   timeout: env.timeouts.test,
   expect: { timeout: env.timeouts.expect },

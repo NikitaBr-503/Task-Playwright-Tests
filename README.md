@@ -1,6 +1,6 @@
 # Precoro E2E Tests
 
-Playwright + TypeScript automation for [app.precoro.com](https://app.precoro.com/),
+Playwright + TypeScript automation for app precoro,
 covering the procure-to-order path: creating a Purchase Requisition, completing
 it, cancelling it, and raising a Purchase Order from it.
 
@@ -42,7 +42,7 @@ precedence over the file, so any runner can override it by exporting them.
 | ------------------------------------ | -------------------------------- | ------------------------- |
 | `BASE_URL`                           | Application under test           | `https://app.precoro.com` |
 | `PRECORO_EMAIL` / `PRECORO_PASSWORD` | Credentials for the default user | _required_                |
-| `HEADLESS`, `SLOW_MO`                | Local debugging knobs            | `true`, `0`               |
+| `HEADLESS`, `SLOW_MO`                | Local debugging constants        | `true`, `0`               |
 | `*_TIMEOUT`, `RETRIES`, `WORKERS`    | Runner tuning                    | see `src/config/env.ts`   |
 
 Values are read through typed helpers in [`src/config/env.ts`](src/config/env.ts)
@@ -51,22 +51,47 @@ being truthy and a missing credential from surfacing as a mystery login failure.
 
 ## Scripts
 
-| Command                   | What it does                                    |
-| ------------------------- | ----------------------------------------------- |
-| `npm test`                | Full suite (setup + all three browsers)         |
-| `npm run test:headed`     | Watch it run in a real browser                  |
-| `npm run test:ui`         | Playwright UI mode (best for authoring specs)   |
-| `npm run test:debug`      | Step through with the inspector                 |
-| `npm run test:chromium`   | Single browser (also `:firefox`, `:webkit`)     |
-| `npm run test:smoke`      | Only `@smoke`-tagged tests                      |
-| `npm run test:regression` | Only `@regression`-tagged tests                 |
-| `npm run test:auth`       | Re-run the login setup / refresh stored session |
-| `npm run report`          | Open the last HTML report                       |
-| `npm run trace`           | Open a saved trace file                         |
-| `npm run codegen`         | Record selectors against the live app           |
-| `npm run typecheck`       | `tsc --noEmit`                                  |
-| `npm run format`          | Prettier (`format:check` to verify only)        |
-| `npm run clean`           | Remove reports, results and cached sessions     |
+| Command                   | What it does                                           |
+| ------------------------- | ------------------------------------------------------ |
+| `npm test`                | Full suite (setup + all three browsers)                |
+| `npm run test:headed`     | Watch it run in a real browser                         |
+| `npm run test:ui`         | Playwright UI mode (best for authoring specs)          |
+| `npm run test:debug`      | Step through with the inspector                        |
+| `npm run test:chromium`   | Single browser (also `:firefox`, `:webkit`)            |
+| `npm run test:smoke`      | Only `@smoke`-tagged tests                             |
+| `npm run test:regression` | Only `@regression`-tagged tests                        |
+| `npm run test:name`       | Run tests whose **title** matches an argument          |
+| `npm run test:file`       | Run a **file, directory or line** given as an argument |
+| `npm run test:auth`       | Re-run the login setup / refresh stored session        |
+| `npm run report`          | Open the last HTML report                              |
+| `npm run trace`           | Open a saved trace file                                |
+| `npm run codegen`         | Record selectors against the live app                  |
+| `npm run typecheck`       | `tsc --noEmit`                                         |
+| `npm run format`          | Prettier (`format:check` to verify only)               |
+| `npm run clean`           | Remove reports, results and cached sessions            |
+
+### Running a single test
+
+Arguments go after `--`, which is how npm forwards them to Playwright.
+
+```bash
+# by case ID — test titles are prefixed TC-PR-001 … TC-PO-001
+npm run test:name -- "TC-PR-002"
+
+# by any words from the title
+npm run test:name -- "canceled with a reason"
+
+# by file, directory, or file:line
+npm run test:file -- tests/ui/purchase-orders
+npm run test:file -- create-purchase-order.spec.ts:35
+
+# extra flags pass through as usual
+npm run test:name -- "TC-PO-001" --headed --project=chromium
+```
+
+`test:name` is `--grep`, so the argument is a **regular expression matched
+against the full title** — `TC-PR-00` selects all three requisition cases, and a
+literal `(` or `.` needs escaping.
 
 ## Architecture
 
